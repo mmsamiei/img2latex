@@ -65,7 +65,7 @@ class ToTensor(object):
         formula_tensor = torch.LongTensor((self.max_len))
         for i, c in enumerate(formula):
             formula_tensor[i] = self.char_dict[c]
-        return {'image':torch.from_numpy(image), 'formula':formula_tensor}
+        return {'image':torch.from_numpy(image).unsqueeze(0), 'formula':formula_tensor}
 
 pari_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt")
 transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt",
