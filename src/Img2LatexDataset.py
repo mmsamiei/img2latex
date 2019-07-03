@@ -73,7 +73,10 @@ transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././
                                             Rescale((200, 30)),
                                             ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
                                         ]))
-
-x = transformed_dataset[100]
-print(x['formula'][0:100])
-print("Hi")
+dataloader = DataLoader(transformed_dataset, batch_size=16, drop_last=True)
+for i_batch, sample_batched in enumerate(dataloader):
+    print(i_batch)
+    images = sample_batched['image']
+    formulas = sample_batched['formula']
+    print(images.shape)
+    print(formulas.shape)
