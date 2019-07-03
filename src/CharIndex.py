@@ -24,5 +24,5 @@ class CharIndex():
 
 
 
-a = CharIndex("./Dataset/formulas/train_formulas.txt")
-a.save(".")
+#a = CharIndex("./Dataset/formulas/train_formulas.txt")
+#a.save(".")

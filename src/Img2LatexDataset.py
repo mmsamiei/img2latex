@@ -5,6 +5,7 @@ import torch
 from PIL import Image
 import numpy as np
 from skimage import io, transform
+import json
 
 class Img2LatexDataset(Dataset):
 
@@ -49,16 +50,30 @@ class Rescale(object):
 
 class ToTensor(object):
 
+    def __init__(self, str_file_addr, charindex_file_addr):
+        f = open(str_file_addr)
+        formulas = f.readlines()
+        lens = [len(formula) for formula in formulas]
+        self.max_len = max(lens) + 2
+        with open(charindex_file_addr) as handler:
+            self.char_dict = json.load(handler)
+
     def __call__(self, sample):
         image, formula = sample['image'], sample['formula']
-        return {'image':torch.from_numpy(image), 'formula':formula}
+        formula = "آ" + formula + "ب"
+        formula = formula + "ب" * (self.max_len - len(formula))
+        formula_tensor = torch.LongTensor((self.max_len))
+        for i, c in enumerate(formula):
+            formula_tensor[i] = self.char_dict[c]
+        return {'image':torch.from_numpy(image), 'formula':formula_tensor}
 
 pari_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt")
 transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt",
                                         transform=transforms.Compose([
                                             Rescale((200, 30)),
-                                            ToTensor()
+                                            ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
                                         ]))
 
 x = transformed_dataset[100]
+print(x['formula'][0:100])
 print("Hi")
