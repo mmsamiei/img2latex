@@ -51,6 +51,7 @@ class Trainer:
             valid_losses.append(self.evaluate())
             end_time = time.time()
             epoch_mins, epoch_secs = self.epoch_time(start_time, end_time)
+            print("epoch {}, time elapse is {} seconds".format(i_epoch, epoch_secs))
             ## TODO
 
         print(epoch_losses)

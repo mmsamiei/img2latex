@@ -28,13 +28,16 @@ if __name__ =="__main__":
     img2seq = Img2seq(encoder, decoder, dev)
 
     trainer = Trainer(img2seq, dataloader, dataloader, char_dict['خ'])
+    trainer.init_weights()
+    print(trainer.count_parameters())
+    trainer.train(2)
 
-    for i_batch, sample_batched in enumerate(dataloader):
-        print(i_batch)
-        images = sample_batched['src']
-        formulas = sample_batched['trg']
-        formulas = formulas.permute(1,0)
-        print(images.shape)
-        print(formulas.shape)
-        img2seq(images, formulas)
+    # for i_batch, sample_batched in enumerate(dataloader):
+    #     print(i_batch)
+    #     images = sample_batched['src']
+    #     formulas = sample_batched['trg']
+    #     formulas = formulas.permute(1,0)
+    #     print(images.shape)
+    #     print(formulas.shape)
+    #     img2seq(images, formulas)
 
