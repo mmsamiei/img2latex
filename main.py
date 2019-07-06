@@ -7,14 +7,21 @@ chardict_file_addr = "./char_dict.json"
 
 if __name__ =="__main__":
     print("hi")
-    batch_size = 64
+    batch_size = 8
     transformed_dataset = Img2LatexDataset("./Dataset/images/images_train","./Dataset/formulas/train_formulas.txt",
                                                 transform=transforms.Compose([
                                                     Rescale((200, 30)),
                                                     ToTensor("./Dataset/formulas/train_formulas.txt", "char_dict.json")
                                                 ]))
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True)
 
+    validation_transformed_dataset = Img2LatexDataset("./Dataset/images/images_validation", "./Dataset/formulas/validation_formulas.txt",
+                                           transform=transforms.Compose([
+                                               Rescale((200, 30)),
+                                               ToTensor("./Dataset/formulas/validation_formulas.txt", "char_dict.json")
+                                           ]))
+
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True)
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True)
     hidden_size = 300
     emb_size = 20
     with open(chardict_file_addr) as handler:
@@ -27,9 +34,9 @@ if __name__ =="__main__":
     ## TODO double!!!
     img2seq = Img2seq(encoder, decoder, dev)
 
-    trainer = Trainer(img2seq, dataloader, dataloader, char_dict['خ'])
+    trainer = Trainer(img2seq, dataloader, validation_dataloader, char_dict['خ'])
     trainer.init_weights()
-    print(trainer.count_parameters())
+    print("number of model parameters! : ", trainer.count_parameters())
     trainer.train(2)
 
     # for i_batch, sample_batched in enumerate(dataloader):
