@@ -65,7 +65,7 @@ class ToTensor(object):
         formula_tensor = torch.LongTensor((self.max_len))
         for i, c in enumerate(formula):
             formula_tensor[i] = self.char_dict[c]
-        return {'image':torch.from_numpy(image).unsqueeze(0), 'formula':formula_tensor}
+        return {'src':torch.from_numpy(image).unsqueeze(0), 'trg':formula_tensor}
 
 if __name__ == "__main__":
     print("hi")
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     dataloader = DataLoader(transformed_dataset, batch_size=16, drop_last=True)
     for i_batch, sample_batched in enumerate(dataloader):
         print(i_batch)
-        images = sample_batched['image']
-        formulas = sample_batched['formula']
+        images = sample_batched['src']
+        formulas = sample_batched['trg']
         print(images.shape)
         print(formulas.shape)
