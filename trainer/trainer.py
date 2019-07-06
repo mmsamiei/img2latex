@@ -21,8 +21,8 @@ class Trainer:
     def train_one_epoch(self, clip=10):
         self.model.train() #This will turn on dropout (and batch normalization)
         epoch_loss = 0
-        for i, batch in enumerate(self.dataloader):
-            src, trg, _ = batch
+        for i, sample_batched in enumerate(self.dataloader):
+            src, trg = sample_batched['src'], sample_batched['trg']
             # src = [batch_size, 1, 200, 30]
             # trg = [batch_Size, seq_len]
             self.optimizer.zero_grad()
@@ -59,8 +59,8 @@ class Trainer:
         self.model.eval() #This will turn off dropout (and batch normalization)
         epoch_loss = 0
         with torch.no_grad():
-            for i, batch in enumerate(self.validation_dataloader):
-                src, trg, _ = batch
+            for i, sample_batched in enumerate(self.validation_dataloader):
+                src, trg = sample_batched['src'], sample_batched['trg']
                 # src = [batch_size, 1, 200, 30]
                 # trg = [batch_Size, seq_len]
                 trg = trg.permute(1, 0)
