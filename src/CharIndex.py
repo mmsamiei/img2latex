@@ -6,7 +6,7 @@ class CharIndex():
     def __init__(self, file_addr):
         f = open(file_addr)
         formulas_str = f.readlines()
-        chars = {"آ","ب"}
+        chars = {"آ","پ","خ"}
         for formula in formulas_str:
             for char in formula:
                 if char not in chars:
@@ -15,14 +15,17 @@ class CharIndex():
         self.char_list = [None] * len(chars)
         for i, k in enumerate(self.char_dict):
             self.char_list[i] = k
+        print(self.char_dict['خ'])
+        print(self.char_dict['آ'])
+        print(self.char_dict['پ'])
 
     def save(self, dir_addr):
         handler1 = open(os.path.join(dir_addr, "char_dict.json"), "w")
-        json.dump(self.char_dict, handler1)
+        json.dump(self.char_dict, handler1, ensure_ascii=False)
         handler2 = open(os.path.join(dir_addr, "char_list.json"), "w")
-        json.dump(self.char_list, handler2)
+        json.dump(self.char_list, handler2, ensure_ascii=False)
 
 
 
-#a = CharIndex("./Dataset/formulas/train_formulas.txt")
-#a.save(".")
+a = CharIndex("./Dataset/formulas/train_formulas.txt")
+a.save(".")
