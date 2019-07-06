@@ -74,20 +74,20 @@ class Img2seq(nn.Module):
 
 
 
+if __name__ =="__main__":
+    hidden_size = 300
+    emb_size = 20
+    vocab_size = 30
+    batch_size = 64
+    dev = torch.device("cpu")
 
-hidden_size = 300
-emb_size = 20
-vocab_size = 30
-batch_size = 64
-dev = torch.device("cpu")
+    encoder = CNNEncoder()
+    decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
+    img2seq = Img2seq(encoder, decoder, dev)
 
-encoder = CNNEncoder()
-decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
-img2seq = Img2seq(encoder, decoder, dev)
-
-src = torch.rand((batch_size,1,200,30))
-trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
-res = img2seq(src, trg)
-print(res.shape)
+    src = torch.rand((batch_size,1,200,30))
+    trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
+    res = img2seq(src, trg)
+    print(res.shape)
 
 

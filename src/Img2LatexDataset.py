@@ -67,16 +67,18 @@ class ToTensor(object):
             formula_tensor[i] = self.char_dict[c]
         return {'image':torch.from_numpy(image).unsqueeze(0), 'formula':formula_tensor}
 
-pari_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt")
-transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt",
-                                        transform=transforms.Compose([
-                                            Rescale((200, 30)),
-                                            ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
-                                        ]))
-dataloader = DataLoader(transformed_dataset, batch_size=16, drop_last=True)
-for i_batch, sample_batched in enumerate(dataloader):
-    print(i_batch)
-    images = sample_batched['image']
-    formulas = sample_batched['formula']
-    print(images.shape)
-    print(formulas.shape)
+if __name__ == "__main__":
+    print("hi")
+    pari_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt")
+    transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt",
+                                            transform=transforms.Compose([
+                                                Rescale((200, 30)),
+                                                ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
+                                            ]))
+    dataloader = DataLoader(transformed_dataset, batch_size=16, drop_last=True)
+    for i_batch, sample_batched in enumerate(dataloader):
+        print(i_batch)
+        images = sample_batched['image']
+        formulas = sample_batched['formula']
+        print(images.shape)
+        print(formulas.shape)
