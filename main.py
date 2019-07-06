@@ -1,5 +1,6 @@
 from src.Img2LatexDataset import *
 from Model.model import *
+from trainer.trainer import *
 import json
 chardict_file_addr = "./char_dict.json"
 
@@ -25,6 +26,8 @@ if __name__ =="__main__":
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
     ## TODO double!!!
     img2seq = Img2seq(encoder, decoder, dev)
+
+    trainer = Trainer(img2seq, dataloader, dataloader, char_dict['خ'])
 
     for i_batch, sample_batched in enumerate(dataloader):
         print(i_batch)
