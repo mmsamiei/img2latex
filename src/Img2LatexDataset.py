@@ -60,8 +60,8 @@ class ToTensor(object):
 
     def __call__(self, sample):
         image, formula = sample['image'], sample['formula']
-        formula = "آ" + formula + "ب"
-        formula = formula + "ب" * (self.max_len - len(formula))
+        formula = "آ" + formula + "پ"
+        formula = formula + "خ" * (self.max_len - len(formula))
         formula_tensor = torch.LongTensor((self.max_len))
         for i, c in enumerate(formula):
             formula_tensor[i] = self.char_dict[c]
