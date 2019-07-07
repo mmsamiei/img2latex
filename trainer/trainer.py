@@ -25,6 +25,8 @@ class Trainer:
         self.model.train() #This will turn on dropout (and batch normalization)
         epoch_loss = 0
         for i, sample_batched in enumerate(self.dataloader):
+            if i > 1 :
+                break
             src, trg = sample_batched['src'], sample_batched['trg']
             # src = [batch_size, 1, 200, 30]
             # trg = [batch_Size, seq_len]
@@ -57,7 +59,7 @@ class Trainer:
             valid_losses.append(self.evaluate())
             end_time = time.time()
             epoch_mins, epoch_secs = self.epoch_time(start_time, end_time)
-            print("epoch {}, time elapse is {} seconds and loss is ".format(i_epoch, epoch_secs, epoch_loss))
+            print("epoch {}, time elapse is {} seconds and loss is {} ".format(i_epoch, epoch_secs, epoch_loss))
             if (i_epoch + 1) % save_period == 0:
                 temp_path = os.path.join('.', 'saved_models')
                 temp_path = os.path.join(temp_path, directory_name)
@@ -72,6 +74,8 @@ class Trainer:
         epoch_loss = 0
         with torch.no_grad():
             for i, sample_batched in enumerate(self.validation_dataloader):
+                if i > 1:
+                    break
                 src, trg = sample_batched['src'], sample_batched['trg']
                 # src = [batch_size, 1, 200, 30]
                 # trg = [batch_Size, seq_len]
