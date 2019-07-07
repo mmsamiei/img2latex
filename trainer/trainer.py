@@ -6,12 +6,13 @@ import os
 import datetime
 
 class Trainer:
-    def __init__(self, model, dataloader, validation_dataloader, PAD_IDX):
+    def __init__(self, model, dataloader, validation_dataloader, PAD_IDX, dev):
         self.model = model
         self.dataloader = dataloader
         self.validation_dataloader = validation_dataloader
         self.optimizer = optim.Adam(self.model.parameters())
         self.criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)
+        self.dev = dev
 
     def init_weights(self):
         for name, param in self.model.named_parameters():
@@ -25,9 +26,9 @@ class Trainer:
         self.model.train() #This will turn on dropout (and batch normalization)
         epoch_loss = 0
         for i, sample_batched in enumerate(self.dataloader):
-            if i > 1 :
-                break
             src, trg = sample_batched['src'], sample_batched['trg']
+            src = src.to(self.dev)
+            trg = trg.to(self.dev)
             # src = [batch_size, 1, 200, 30]
             # trg = [batch_Size, seq_len]
             self.optimizer.zero_grad()
@@ -74,9 +75,9 @@ class Trainer:
         epoch_loss = 0
         with torch.no_grad():
             for i, sample_batched in enumerate(self.validation_dataloader):
-                if i > 1:
-                    break
                 src, trg = sample_batched['src'], sample_batched['trg']
+                src = src.to(self.dev)
+                trg = trg.to(self.dev)
                 # src = [batch_size, 1, 200, 30]
                 # trg = [batch_Size, seq_len]
                 trg = trg.permute(1, 0)

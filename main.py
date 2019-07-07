@@ -29,15 +29,17 @@ if __name__ =="__main__":
     vocab_size = len(char_dict.keys())
     dev = torch.device("cpu")
 
+    dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    dev = torch.device('cuda')
     encoder = CNNEncoder().double()
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
     ## TODO double!!!
-    img2seq = Img2seq(encoder, decoder, dev)
+    img2seq = Img2seq(encoder, decoder, dev).to(dev)
 
-    trainer = Trainer(img2seq, dataloader, validation_dataloader, char_dict['خ'])
+    trainer = Trainer(img2seq, dataloader, validation_dataloader, char_dict['خ'], dev)
     trainer.init_weights()
     print("number of model parameters! : ", trainer.count_parameters())
-    trainer.train(2)
+    trainer.train(50)
 
     # for i_batch, sample_batched in enumerate(dataloader):
     #     print(i_batch)
