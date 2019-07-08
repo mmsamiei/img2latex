@@ -60,7 +60,7 @@ class Trainer:
             valid_losses.append(self.evaluate())
             end_time = time.time()
             epoch_mins, epoch_secs = self.epoch_time(start_time, end_time)
-            print("epoch {}, time elapse is {} seconds and loss is {} ".format(i_epoch, epoch_secs, epoch_loss))
+            print("epoch {}, time elapse is {} mins {} seconds and loss is {} ".format(i_epoch, epoch_mins, epoch_secs, epoch_loss))
             if (i_epoch + 1) % save_period == 0:
                 temp_path = os.path.join('.', 'saved_models')
                 temp_path = os.path.join(temp_path, directory_name)
