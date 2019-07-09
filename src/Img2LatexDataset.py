@@ -17,7 +17,7 @@ class Img2LatexDataset(Dataset):
         self.formulas = f.readlines()
 
     def __len__(self):
-        return len(self.formulas)
+        return 300#len(self.formulas)
 
     def __getitem__(self, idx):
         img_addr_idx = os.path.join(self.img_dir, str(idx)+".png")
@@ -75,7 +75,7 @@ if __name__ == "__main__":
                                                 Rescale((200, 30)),
                                                 ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
                                             ]))
-    dataloader = DataLoader(transformed_dataset, batch_size=16, drop_last=True)
+    dataloader = DataLoader(transformed_dataset, batch_size=64, drop_last=True, num_workers=4)
     for i_batch, sample_batched in enumerate(dataloader):
         print(i_batch)
         images = sample_batched['src']

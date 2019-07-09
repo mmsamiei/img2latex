@@ -16,7 +16,7 @@ class Trainer:
 
     def init_weights(self):
         for name, param in self.model.named_parameters():
-            nn.init.uniform_(param.data, -0.08, 0.08)
+            nn.init.uniform_(param.data, -0.09, 0.09)
 
     def count_parameters(self):
         params = [p.numel() for p in self.model.parameters() if p.requires_grad]
@@ -45,7 +45,7 @@ class Trainer:
             nn.utils.clip_grad_norm_(self.model.parameters(), clip)
             self.optimizer.step()
             epoch_loss += loss.item()
-        return epoch_loss
+        return epoch_loss/len(self.dataloader)
 
     def train(self, N_epoch, save_period = 25):
         epoch_losses = []
@@ -60,7 +60,8 @@ class Trainer:
             valid_losses.append(self.evaluate())
             end_time = time.time()
             epoch_mins, epoch_secs = self.epoch_time(start_time, end_time)
-            print("epoch {}, time elapse is {} mins {} seconds and loss is {} ".format(i_epoch, epoch_mins, epoch_secs, epoch_loss))
+            print("epoch {}, time elapse is {} mins {} seconds".format(i_epoch, epoch_mins, epoch_secs))
+            print("train loss: {} \t valid loss: {}".format(epoch_loss, valid_losses[-1]))
             if (i_epoch + 1) % save_period == 0:
                 temp_path = os.path.join('.', 'saved_models')
                 temp_path = os.path.join(temp_path, directory_name)

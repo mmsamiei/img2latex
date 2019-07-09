@@ -7,7 +7,7 @@ chardict_file_addr = "./char_dict.json"
 
 if __name__ =="__main__":
     print("hi")
-    batch_size = 8
+    batch_size = 32
     transformed_dataset = Img2LatexDataset("./Dataset/images/images_train","./Dataset/formulas/train_formulas.txt",
                                                 transform=transforms.Compose([
                                                     Rescale((200, 30)),
@@ -23,7 +23,7 @@ if __name__ =="__main__":
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True)
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True)
     hidden_size = 300
-    emb_size = 20
+    emb_size = 10
     with open(chardict_file_addr) as handler:
         char_dict = json.load(handler)
     vocab_size = len(char_dict.keys())
