@@ -38,7 +38,7 @@ class CharIndex():
             str = str + self.char_list[v]
             if v == self.char_dict['پ']:
                 break
-        return str
+        return str[1:-1]
 
 
 a = CharIndex("./Dataset/formulas/train_formulas.txt")
