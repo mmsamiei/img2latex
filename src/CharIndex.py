@@ -36,6 +36,8 @@ class CharIndex():
         str = ""
         for i,v in enumerate(tensor):
             str = str + self.char_list[v]
+            if v == self.char_dict['پ']:
+                break
         return str
 
 
