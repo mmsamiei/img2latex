@@ -87,7 +87,7 @@ class Img2seq(nn.Module):
         hidden = self.encoder(src)
         hidden = hidden.unsqueeze(0)
         # hidden = [1, batch_size, hid_dim]
-        input = torch.LongTensor(batch_size).fill_(start_token_index)
+        input = torch.LongTensor(batch_size).fill_(start_token_index).to(self.device)
         results[:, 0] = input
         for t in range(1, max_len):
             output, hidden = self.decoder(input, hidden)

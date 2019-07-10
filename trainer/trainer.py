@@ -47,7 +47,7 @@ class Trainer:
             epoch_loss += loss.item()
         return epoch_loss/len(self.dataloader)
 
-    def train(self, N_epoch, save_period = 25):
+    def train(self, N_epoch, save_period = 1):
         epoch_losses = []
         valid_losses = []
         directory_name = datetime.datetime.now().strftime('%Y-%m-%d--%H:%M:%S')
