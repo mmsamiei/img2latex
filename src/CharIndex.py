@@ -46,5 +46,6 @@ class CharIndex():
         return str[1:-1]
 
 
-a = CharIndex("./Dataset/formulas/train_formulas.txt")
-a.save(".")
+if __name__ =="__main__":
+    a = CharIndex("./Dataset/formulas/train_formulas.txt")
+    a.save(".")
