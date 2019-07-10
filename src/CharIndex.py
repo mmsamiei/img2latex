@@ -31,7 +31,12 @@ class CharIndex():
         handler2 = open(os.path.join(dir_addr, "char_list.json"), "r")
         self.char_list = json.load(self.char_list, handler2, ensure_ascii=False)
 
-
+    def translate_to_char(self, tensor):
+        ## tensor = [max_len]
+        str = ""
+        for i,v in enumerate(tensor):
+            str = str + self.char_list[v]
+        return str
 
 
 a = CharIndex("./Dataset/formulas/train_formulas.txt")
