@@ -2,6 +2,7 @@ from torch import nn
 import torch
 import torch.nn.functional as F
 import random
+import json
 
 class CNNEncoder(nn.Module):
     def __init__(self, output_size=300):
@@ -76,12 +77,33 @@ class Img2seq(nn.Module):
             input = (trg[t] if teacher_forcing else top1)
         return outputs
 
+    def greedy_inference(self, src, start_token_index, max_len):
+        # src = [batch_size, 1, 200, 30]
+        batch_size = src.shape[0]
+        max_len = max_len
+        trg_vocab_dim = self.decoder.vocab_size
+        # tensor to store decoder outputs
+        results = torch.zeros(batch_size, max_len)
+        hidden = self.encoder(src)
+        hidden = hidden.unsqueeze(0)
+        # hidden = [1, batch_size, hid_dim]
+        input = torch.LongTensor(batch_size).fill_(start_token_index)
+        results[:, 0] = input
+        for t in range(1, max_len):
+            output, hidden = self.decoder(input, hidden)
+            top1 = output.max(1)[1]
+            input = top1
+            results[:, t] = top1
+        return results
+
+
+
 
 
 if __name__ =="__main__":
     hidden_size = 300
     emb_size = 20
-    vocab_size = 30
+    vocab_size = 50
     batch_size = 64
     dev = torch.device("cpu")
 
@@ -93,5 +115,13 @@ if __name__ =="__main__":
     trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
     res = img2seq(src, trg)
     print(res.shape)
+
+
+    print("**** test inference part! ***")
+    handler1 = open("char_dict.json")
+    char_dict = json.load(handler1)
+    result = img2seq.greedy_inference(src, char_dict['آ'], 40)
+    print(result.shape)
+
 
 
