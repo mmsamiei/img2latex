@@ -1,9 +1,10 @@
 from torch import nn
 import torch
+import torch.nn.functional as F
 import random
 
 class CNNEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, output_size=300):
         super(CNNEncoder, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3)
@@ -11,18 +12,21 @@ class CNNEncoder(nn.Module):
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
         self.pool2 = nn.MaxPool2d(kernel_size=3)
-        self.fc = nn.Linear(5120, 300)
+        self.dropout = nn.Dropout(p=0.5)
+        self.output_size = output_size
+        self.fc = nn.Linear(5120, self.output_size)
 
     def forward(self, x):
         temp = x
-        temp = self.conv1(temp)
-        temp = self.conv2(temp)
+        temp = F.relu(self.conv1(temp))
+        temp = F.relu(self.conv2(temp))
         temp = self.pool1(temp)
-        temp = self.conv3(temp)
-        temp = self.conv4(temp)
+        temp = F.relu(self.conv3(temp))
+        temp = F.relu(self.conv4(temp))
         temp = self.pool2(temp)
         temp = temp.view(-1, 5120)
-        temp = self.fc(temp)
+        temp = self.dropout(temp)
+        temp = F.relu(self.fc(temp))
         return temp
 
 class RNNDecoder(nn.Module):
