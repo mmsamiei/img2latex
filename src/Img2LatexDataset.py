@@ -51,22 +51,35 @@ class Rescale(object):
 
 class ToTensor(object):
 
-    def __init__(self, str_file_addr, charindex_file_addr):
+    def __init__(self, str_file_addr, index_file_addr, char_or_token="char"):
+        self.char_or_token = char_or_token  ### string -  char or token
         f = open(str_file_addr)
         formulas = f.readlines()
-        lens = [len(formula) for formula in formulas]
+        if char_or_token == "char":
+            lens = [len(formula) for formula in formulas]
+        elif char_or_token =="token":
+            lens = [len(formula.strip().split()) for formula in formulas]
         self.max_len = max(lens) + 2
-        with open(charindex_file_addr) as handler:
+        with open(index_file_addr) as handler:
             self.char_dict = json.load(handler)
 
     def __call__(self, sample):
-        image, formula = sample['image'], sample['formula']
-        formula = "آ" + formula + "پ"
-        formula = formula + "خ" * (self.max_len - len(formula))
-        formula_tensor = torch.LongTensor((self.max_len))
-        for i, c in enumerate(formula):
-            formula_tensor[i] = self.char_dict[c]
-        return {'src':torch.from_numpy(image).unsqueeze(0), 'trg':formula_tensor}
+        if(self.char_or_token == "char"):
+            image, formula = sample['image'], sample['formula']
+            formula = "آ" + formula + "پ"
+            formula = formula + "خ" * (self.max_len - len(formula))
+            formula_tensor = torch.LongTensor((self.max_len))
+            for i, c in enumerate(formula):
+                formula_tensor[i] = self.char_dict[c]
+            return {'src':torch.from_numpy(image).unsqueeze(0), 'trg':formula_tensor}
+        elif(self.char_or_token == "token"):
+            image, formula = sample['image'], sample['formula']
+            formula = " <start> " + formula + " <end> "
+            formula = formula + " <pad> " * (self.max_len - len(formula.strip().split()))
+            formula_tensor = torch.LongTensor((self.max_len))
+            for i, c in enumerate(formula.strip().split()):
+                formula_tensor[i] = self.char_dict[c]
+            return {'src': torch.from_numpy(image).unsqueeze(0), 'trg': formula_tensor}
 
 if __name__ == "__main__":
     print("hi")
@@ -74,9 +87,9 @@ if __name__ == "__main__":
     transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt",
                                             transform=transforms.Compose([
                                                 Rescale((200, 30)),
-                                                ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
+                                                ToTensor(".././Dataset/formulas/train_formulas.txt", "../token_dict.json", "token")
                                             ]))
-    sampler = SubsetRandomSampler(range(0,130))
+    sampler = SubsetRandomSampler(range(0,1000))
     dataloader = DataLoader(transformed_dataset, batch_size=64, drop_last=True, num_workers=1, sampler=sampler)
     for i_batch, sample_batched in enumerate(dataloader):
         print(i_batch)
@@ -84,3 +97,4 @@ if __name__ == "__main__":
         formulas = sample_batched['trg']
         print(images.shape)
         print(formulas.shape)
+        print(formulas[0])
