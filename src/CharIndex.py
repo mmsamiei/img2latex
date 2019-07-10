@@ -25,6 +25,13 @@ class CharIndex():
         handler2 = open(os.path.join(dir_addr, "char_list.json"), "w")
         json.dump(self.char_list, handler2, ensure_ascii=False)
 
+    def load(self, dir_addr):
+        handler1 = open(os.path.join(dir_addr, "char_dict.json"), "r")
+        self.char_dict = json.load(self.char_dict, handler1, ensure_ascii=False)
+        handler2 = open(os.path.join(dir_addr, "char_list.json"), "r")
+        self.char_list = json.load(self.char_list, handler2, ensure_ascii=False)
+
+
 
 
 a = CharIndex("./Dataset/formulas/train_formulas.txt")
