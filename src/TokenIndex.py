@@ -42,7 +42,7 @@ class TokenIndex():
             str = str + " " + self.token_list[int(v.item())]
             if int(v.item()) == self.token_dict['<end>']:
                 break
-        return str[1:-1]
+        return " ".join(str.split()[1:-1])
 
 
 if __name__ == "__main__":
