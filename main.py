@@ -1,6 +1,9 @@
-from src.Img2LatexDataset import *
-from src.CharIndex import *
-from src.TokenIndex import *
+#from src.Img2LatexDataset import *
+#from src.CharIndex import *
+#from src.TokenIndex import *
+from utils.TokenIndex import *
+from utils.CharIndex import *
+from utils.Img2LatexDataset import *
 from Model.model import *
 from trainer.trainer import *
 import json
@@ -24,7 +27,7 @@ if __name__ =="__main__":
                                                ToTensor("./Dataset/formulas/validation_formulas.txt", "token_dict.json", "token")
                                            ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,128)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
     hidden_size = 256
     emb_size = 10
@@ -49,7 +52,7 @@ if __name__ =="__main__":
     trainer = Trainer(img2seq, dataloader, validation_dataloader, token_dict['<pad>'], dev)
     trainer.init_weights()
     print("number of model parameters! : ", trainer.count_parameters())
-    trainer.train(8)
+    trainer.train(9)
 
 
     for i_batch, sample_batched in enumerate(dataloader):
