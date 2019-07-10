@@ -118,10 +118,11 @@ if __name__ =="__main__":
 
 
     print("**** test inference part! ***")
-    handler1 = open("char_dict.json")
-    char_dict = json.load(handler1)
-    result = img2seq.greedy_inference(src, char_dict['آ'], 40)
+    handler1 = open("token_dict.json")
+    token_dict = json.load(handler1)
+    result = img2seq.greedy_inference(src, token_dict['<start>'], 40)
     print(result.shape)
+    print(result)
 
 
 

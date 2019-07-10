@@ -39,7 +39,7 @@ class TokenIndex():
         ## tensor = [max_len]
         str = ""
         for i,v in enumerate(tensor):
-            str = str + self.token_list[int(v.item())]
+            str = str + " " + self.token_list[int(v.item())]
             if int(v.item()) == self.token_dict['<end>']:
                 break
         return str[1:-1]
