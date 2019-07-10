@@ -6,6 +6,7 @@ from PIL import Image
 import numpy as np
 from skimage import io, transform
 import json
+from torch.utils.data.sampler import SubsetRandomSampler
 
 class Img2LatexDataset(Dataset):
 
@@ -17,7 +18,7 @@ class Img2LatexDataset(Dataset):
         self.formulas = f.readlines()
 
     def __len__(self):
-        return 300#len(self.formulas)
+        return len(self.formulas)
 
     def __getitem__(self, idx):
         img_addr_idx = os.path.join(self.img_dir, str(idx)+".png")
@@ -75,7 +76,8 @@ if __name__ == "__main__":
                                                 Rescale((200, 30)),
                                                 ToTensor(".././Dataset/formulas/train_formulas.txt", "../char_dict.json")
                                             ]))
-    dataloader = DataLoader(transformed_dataset, batch_size=64, drop_last=True, num_workers=4)
+    sampler = SubsetRandomSampler(range(0,130))
+    dataloader = DataLoader(transformed_dataset, batch_size=64, drop_last=True, num_workers=1, sampler=sampler)
     for i_batch, sample_batched in enumerate(dataloader):
         print(i_batch)
         images = sample_batched['src']
