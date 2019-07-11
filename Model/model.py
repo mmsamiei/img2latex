@@ -1,8 +1,13 @@
+# بسم الله الرحمن الرحیم
+
+
 from torch import nn
 import torch
 import torch.nn.functional as F
 import random
 import json
+
+
 
 class CNNEncoder(nn.Module):
     def __init__(self, output_size=300):
