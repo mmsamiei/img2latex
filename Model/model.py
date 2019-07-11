@@ -10,18 +10,18 @@ import json
 
 
 class CNNEncoder(nn.Module):
-    def __init__(self, output_size=300):
+    def __init__(self, output_size=300, zip_size = 20):
         super(CNNEncoder, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=(2,1))
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3, stride=(2,1))
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3)
         self.pool1 = nn.MaxPool2d(kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
         self.pool2 = nn.MaxPool2d(kernel_size=3)
-        self.conv5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3,1))
         self.dropout = nn.Dropout(p=0.5)
         self.output_size = output_size
-        self.fc = nn.Linear(512, self.output_size)
+        self.fc = nn.Linear(5120, self.output_size)
+        self.fc_zip = nn.Linear(5120, zip_size)
 
     def forward(self, x):
         temp = x
@@ -31,11 +31,11 @@ class CNNEncoder(nn.Module):
         temp = F.leaky_relu(self.conv3(temp))
         temp = F.leaky_relu(self.conv4(temp))
         temp = self.pool2(temp)
-        temp = F.leaky_relu(self.conv5(temp))
-        temp = temp.view(-1, 512)
+        temp = temp.view(-1, 5120)
         temp = self.dropout(temp)
+        zip = self.fc_zip(temp)
         temp = F.leaky_relu(self.fc(temp))
-        return temp
+        return temp, zip
 
 class RNNDecoder(nn.Module):
     def __init__(self, hidden_size, emb_size, vocab_size):
@@ -72,7 +72,8 @@ class Img2seq(nn.Module):
         trg_vocab_dim = self.decoder.vocab_size
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len, batch_size, trg_vocab_dim).to(self.device)
-        hidden = self.encoder(src)
+        hidden, encoder_zip = self.encoder(src)
+        print("is is ", encoder_zip.shape)
         hidden = hidden.unsqueeze(0)
         # hidden = [1, batch_size, hid_dim]
         input = trg[0, :]
@@ -91,7 +92,7 @@ class Img2seq(nn.Module):
         trg_vocab_dim = self.decoder.vocab_size
         # tensor to store decoder outputs
         results = torch.zeros(batch_size, max_len)
-        hidden = self.encoder(src)
+        hidden, encoder_zip = self.encoder(src)
         hidden = hidden.unsqueeze(0)
         # hidden = [1, batch_size, hid_dim]
         input = torch.LongTensor(batch_size).fill_(start_token_index).to(self.device)
