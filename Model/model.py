@@ -121,7 +121,7 @@ if __name__ =="__main__":
     batch_size = 64
     dev = torch.device("cpu")
 
-    encoder = CNNEncoder()
+    encoder = CNNEncoder(zip_size=40)
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
     img2seq = Img2seq(encoder, decoder, dev)
 
