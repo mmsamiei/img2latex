@@ -34,8 +34,8 @@ if __name__ =="__main__":
                                                ToTensor("./Dataset/formulas/validation_formulas.txt", "token_dict.json", "token")
                                            ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,256)))
-    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,128)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,10000)))
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,1000)))
     hidden_size = 256
     emb_size = 20
     with open(tokendict_file_addr) as handler:

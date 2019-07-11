@@ -10,7 +10,7 @@ class TokenIndex():
         if file_addr is not None:
             f = open(file_addr)
             formulas_str = f.readlines()
-            tokens = {"<start>","<end>","<pad>"}
+            tokens = {"<start>","<end>","<pad>","<UNK>"}
             for formula in formulas_str:
                 for token in formula.strip().split():
                     if token not in tokens:
