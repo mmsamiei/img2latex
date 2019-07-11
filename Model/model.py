@@ -12,6 +12,7 @@ import json
 class CNNEncoder(nn.Module):
     def __init__(self, output_size=300, zip_size = 20):
         super(CNNEncoder, self).__init__()
+        self.zip_size = zip_size
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3)
         self.pool1 = nn.MaxPool2d(kernel_size=3)
@@ -73,12 +74,14 @@ class Img2seq(nn.Module):
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len, batch_size, trg_vocab_dim).to(self.device)
         hidden, encoder_zip = self.encoder(src)
-        print("is is ", encoder_zip.shape)
         hidden = hidden.unsqueeze(0)
         # hidden = [1, batch_size, hid_dim]
         input = trg[0, :]
         for t in range(1, max_len):
             output, hidden = self.decoder(input, hidden)
+            ###
+            hidden[0,:,:self.encoder.zip_size] = encoder_zip
+            ###
             outputs[t] = output
             teacher_forcing = random.random() < teacher_forcing_rate
             top1 = output.max(1)[1]
@@ -99,6 +102,9 @@ class Img2seq(nn.Module):
         results[:, 0] = input
         for t in range(1, max_len):
             output, hidden = self.decoder(input, hidden)
+            ###
+            hidden[0, :, :self.encoder.zip_size] = encoder_zip
+            ###
             top1 = output.max(1)[1]
             input = top1
             results[:, t] = top1
