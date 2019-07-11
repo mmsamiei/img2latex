@@ -64,6 +64,7 @@ if __name__ =="__main__":
         state_dict = torch.load(parsed_args.base_model)
         img2seq.load_state_dict(state_dict)
 
+    trainer.pretrain(20)
     print("number of model parameters! : ", trainer.count_parameters())
     train_loss, valid_loss = trainer.train(100)
 

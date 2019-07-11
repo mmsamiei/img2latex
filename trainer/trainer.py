@@ -74,6 +74,34 @@ class Trainer:
             self.inference_one_sample()
         return epoch_losses, valid_losses
 
+    def pretrain(self, N_epoch):
+        self.model.train()
+        pretrain_optimizer = optim.Adam(self.model.decoder.parameters())
+        for i_epoch in range(N_epoch):
+            epoch_loss = 0
+            for i, sample_batched in enumerate(self.dataloader):
+                src, trg = sample_batched['src'], sample_batched['trg']
+                src = src.to(self.dev)
+                trg = trg.to(self.dev)
+                # src = [batch_size, 1, 200, 30]
+                # trg = [batch_Size, seq_len]
+                self.optimizer.zero_grad()
+                trg = trg.permute(1, 0)
+                # trg = [trg sent len, batch size]
+                output = self.model(src, trg)
+                # output = [trg sent len, batch size, output dim]
+                trg = trg[1:].contiguous().view(-1)
+                # trg = [(trg sent len - 1) * batch size]
+                output = output[1:].view(-1, output.shape[-1])
+                # output = [(trg sent len - 1) * batch size, output dim]
+                loss = self.criterion(output, trg)
+                loss.backward()
+                pretrain_optimizer.step()
+                epoch_loss += loss
+            epoch_loss = epoch_loss / len(self.dataloader)
+            print("pretrain epoch {} finished loss is {}".format(i_epoch, epoch_loss))
+
+
     def evaluate(self):
         self.model.eval() #This will turn off dropout (and batch normalization)
         epoch_loss = 0
