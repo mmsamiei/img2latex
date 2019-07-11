@@ -8,12 +8,18 @@ from Model.model import *
 from trainer.trainer import *
 import json
 from torch.utils.data.sampler import SubsetRandomSampler
+import argparse
 chardict_file_addr = "./char_dict.json"
 tokendict_file_addr = "./token_dict.json"
 
 
 if __name__ =="__main__":
-    print("hi")
+    print("salam")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-base', dest='base_model')
+    parsed_args = parser.parse_args()
+
+
     batch_size = 64
     transformed_dataset = Img2LatexDataset("./Dataset/images/images_train","./Dataset/formulas/train_formulas.txt",
                                                 transform=transforms.Compose([
@@ -28,7 +34,7 @@ if __name__ =="__main__":
                                            ]))
 
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,128)))
-    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,1000)))
     hidden_size = 256
     emb_size = 10
     with open(tokendict_file_addr) as handler:
@@ -50,9 +56,15 @@ if __name__ =="__main__":
     token_index.load('.')
 
     trainer = Trainer(img2seq, dataloader, validation_dataloader, token_dict['<pad>'], dev)
-    trainer.init_weights()
+
+    if parsed_args.base_model is None:
+        trainer.init_weights()
+    else:
+        state_dict = torch.load(parsed_args.base_model)
+        img2seq.load_state_dict(state_dict)
+
     print("number of model parameters! : ", trainer.count_parameters())
-    trainer.train(9)
+    trainer.train(40)
 
 
     for i_batch, sample_batched in enumerate(dataloader):

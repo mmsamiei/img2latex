@@ -4,6 +4,7 @@ from torch import optim
 import time
 import os
 import datetime
+from utils.TokenIndex import *
 
 class Trainer:
     def __init__(self, model, dataloader, validation_dataloader, PAD_IDX, dev):
@@ -67,8 +68,9 @@ class Trainer:
                 temp_path = os.path.join(temp_path, directory_name)
                 temp_path = os.path.join(temp_path, 'model-{}.pt'.format(i_epoch))
                 torch.save(self.model.state_dict(), temp_path)
+                print("model saved in: {}".format(temp_path))
             ## TODO
-
+            self.inference_one_sample()
         print(epoch_losses)
 
     def evaluate(self):
@@ -89,6 +91,22 @@ class Trainer:
                 loss = self.criterion(output, trg)
                 epoch_loss += loss.item()
         return  epoch_loss/len(self.validation_dataloader)
+
+    def inference_one_sample(self):
+        self.model.eval()
+        token_index = TokenIndex()
+        token_index.load('.')
+        with torch.no_grad():
+            sample_batched = next(iter(self.dataloader))
+            images = sample_batched['src'].to(self.dev)
+            ##TODO
+            result = self.model.greedy_inference(images, 18, 50)
+            str = token_index.translate_to_token(result[0])
+            str = token_index.translate_to_token(result[1])
+            print("generated sample: {}".format(str))
+        return
+
+
 
     def epoch_time(self, start_time, end_time):
         elapsed_time = end_time - start_time
