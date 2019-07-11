@@ -6,6 +6,7 @@ import os
 import datetime
 from utils.TokenIndex import *
 
+
 class Trainer:
     def __init__(self, model, dataloader, validation_dataloader, PAD_IDX, dev):
         self.model = model
@@ -71,7 +72,7 @@ class Trainer:
                 print("model saved in: {}".format(temp_path))
             ## TODO
             self.inference_one_sample()
-        print(epoch_losses)
+        return epoch_losses, valid_losses
 
     def evaluate(self):
         self.model.eval() #This will turn off dropout (and batch normalization)
@@ -113,4 +114,3 @@ class Trainer:
         elapsed_mins = int(elapsed_time / 60)
         elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
         return elapsed_mins, elapsed_secs
-

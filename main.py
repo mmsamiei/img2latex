@@ -9,6 +9,7 @@ from trainer.trainer import *
 import json
 from torch.utils.data.sampler import SubsetRandomSampler
 import argparse
+import matplotlib.pyplot as plt
 chardict_file_addr = "./char_dict.json"
 tokendict_file_addr = "./token_dict.json"
 
@@ -33,10 +34,10 @@ if __name__ =="__main__":
                                                ToTensor("./Dataset/formulas/validation_formulas.txt", "token_dict.json", "token")
                                            ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,128)))
-    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,1000)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,256)))
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,128)))
     hidden_size = 256
-    emb_size = 10
+    emb_size = 20
     with open(tokendict_file_addr) as handler:
         token_dict = json.load(handler)
     vocab_size = len(token_dict.keys())
@@ -64,8 +65,16 @@ if __name__ =="__main__":
         img2seq.load_state_dict(state_dict)
 
     print("number of model parameters! : ", trainer.count_parameters())
-    trainer.train(40)
+    train_loss, valid_loss = trainer.train(100)
 
+    print("train loss is : \n {}".format(train_loss))
+    print("valid loss is : \n {}".format(valid_loss))
+
+    fig, ax = plt.subplots()
+    ax.plot(train_loss)
+    ax.plot(valid_loss)
+    plt.show()
+    fig.savefig("test.png")
 
     for i_batch, sample_batched in enumerate(dataloader):
          images = sample_batched['src'].to(dev)
@@ -81,4 +90,3 @@ if __name__ =="__main__":
     #      print(images.shape)
     #      print(formulas.shape)
     #      img2seq(images, formulas)
-

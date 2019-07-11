@@ -12,48 +12,30 @@ import json
 class CNNEncoder(nn.Module):
     def __init__(self, output_size=300):
         super(CNNEncoder, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=(2,1))
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3, stride=(2,1))
         self.pool1 = nn.MaxPool2d(kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
         self.pool2 = nn.MaxPool2d(kernel_size=3)
+        self.conv5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3,1))
         self.dropout = nn.Dropout(p=0.5)
         self.output_size = output_size
-        self.fc = nn.Linear(5120, self.output_size)
+        self.fc = nn.Linear(512, self.output_size)
 
     def forward(self, x):
         temp = x
-        temp = F.relu(self.conv1(temp))
-        temp = F.relu(self.conv2(temp))
+        temp = F.leaky_relu(self.conv1(temp))
+        temp = F.leaky_relu(self.conv2(temp))
         temp = self.pool1(temp)
-        temp = F.relu(self.conv3(temp))
-        temp = F.relu(self.conv4(temp))
+        temp = F.leaky_relu(self.conv3(temp))
+        temp = F.leaky_relu(self.conv4(temp))
         temp = self.pool2(temp)
-        temp = temp.view(-1, 5120)
+        temp = F.leaky_relu(self.conv5(temp))
+        temp = temp.view(-1, 512)
         temp = self.dropout(temp)
-        temp = F.relu(self.fc(temp))
+        temp = F.leaky_relu(self.fc(temp))
         return temp
-
-class RNNEncoder(nn.Module):
-    def __init__(self, input_size, hidden_size, batch_size):
-        super(RNNEncoder, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.batch_size = batch_size
-    ## layers
-        self.gru = nn.GRU(self.input_size, self.hidden_size)
-
-    def initialize_hidden_state(self, device):
-        return torch.zeros((1, self.batch_size, self.hidden_size)).to(device) ## (1, batch_size, hidden_size)
-
-    def forward(self, x, lens, device):
-        temp = x #(seq_len, batch, input_size)
-        self.hidden = self.initialize_hidden_state(device) ## (1, batch_size, hidden_size)
-        _, self.hidden = self.gru(temp, self.hidden) ## hidden = (1, batch_size, hidden_size)
-        return self.hidden
-
-
 
 class RNNDecoder(nn.Module):
     def __init__(self, hidden_size, emb_size, vocab_size):
@@ -82,7 +64,7 @@ class Img2seq(nn.Module):
         self.decoder = decoder
         self.device = device
 
-    def forward(self, src, trg, teacher_forcing_rate = 0.5):
+    def forward(self, src, trg, teacher_forcing_rate = 0.99):
         # src = [batch_size, 1, 200, 30]
         # trg  = [trg_sent_len, batch_size]
         batch_size = trg.shape[1]
@@ -141,10 +123,6 @@ if __name__ =="__main__":
     res = img2seq(src, trg)
     print(res.shape)
 
-    x = torch.randn((40, 64, 128))
-    rnn_encoder = RNNEncoder(128, 200, 64)
-    print(rnn_encoder(x, 40, dev).shape)
-
 
     print("**** test inference part! ***")
     handler1 = open("token_dict.json")
@@ -152,6 +130,3 @@ if __name__ =="__main__":
     result = img2seq.greedy_inference(src, token_dict['<start>'], 40)
     print(result.shape)
     print(result)
-
-
-
