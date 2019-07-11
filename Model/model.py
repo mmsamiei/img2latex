@@ -35,6 +35,26 @@ class CNNEncoder(nn.Module):
         temp = F.relu(self.fc(temp))
         return temp
 
+class RNNEncoder(nn.Module):
+    def __init__(self, input_size, hidden_size, batch_size):
+        super(RNNEncoder, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.batch_size = batch_size
+    ## layers
+        self.gru = nn.GRU(self.input_size, self.hidden_size)
+
+    def initialize_hidden_state(self, device):
+        return torch.zeros((1, self.batch_size, self.hidden_size)).to(device) ## (1, batch_size, hidden_size)
+
+    def forward(self, x, lens, device):
+        temp = x #(seq_len, batch, input_size)
+        self.hidden = self.initialize_hidden_state(device) ## (1, batch_size, hidden_size)
+        _, self.hidden = self.gru(temp, self.hidden) ## hidden = (1, batch_size, hidden_size)
+        return self.hidden
+
+
+
 class RNNDecoder(nn.Module):
     def __init__(self, hidden_size, emb_size, vocab_size):
         super(RNNDecoder, self).__init__()
@@ -120,6 +140,10 @@ if __name__ =="__main__":
     trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
     res = img2seq(src, trg)
     print(res.shape)
+
+    x = torch.randn((40, 64, 128))
+    rnn_encoder = RNNEncoder(128, 200, 64)
+    print(rnn_encoder(x, 40, dev).shape)
 
 
     print("**** test inference part! ***")
