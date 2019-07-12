@@ -37,9 +37,9 @@ if __name__ == "__main__":
                                                       ]))
 
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True,
-                            sampler=SubsetRandomSampler(range(1, 100)))
+                            sampler=SubsetRandomSampler(range(1, 70)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True,
-                                       sampler=SubsetRandomSampler(range(1, 100)))
+                                       sampler=SubsetRandomSampler(range(1, 70)))
     hidden_size = 128
     encoder_zip_size = 64
     emb_size = 20
@@ -47,9 +47,11 @@ if __name__ == "__main__":
         token_dict = json.load(handler)
     vocab_size = len(token_dict.keys())
     dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    dev = 'cpu'
     encoder = CNNEncoder(hidden_size, encoder_zip_size).double()
+    rnn_encoder = RNNEncoder(128, hidden_size).double()
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
-    img2seq = Img2seq(encoder, decoder, dev).double().to(dev)
+    img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).double().to(dev)
 
     char_index = CharIndex()
     char_index.load('.')

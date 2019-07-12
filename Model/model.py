@@ -22,7 +22,6 @@ class CNNEncoder(nn.Module):
         self.pool2 = nn.MaxPool2d(kernel_size=3)
         self.dropout = nn.Dropout(p=0.5)
         self.output_size = output_size
-        self.fc = nn.Linear(5120, self.output_size)
         self.fc_zip = nn.Linear(5120, zip_size)
 
     def forward(self, x):
@@ -39,6 +38,20 @@ class CNNEncoder(nn.Module):
         temp = self.pool2(temp)
         temp = temp.view(temp.shape[0], temp.shape[1], -1)
         return temp
+
+class RNNEncoder(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(RNNEncoder, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+    # layers
+        self.gru = nn.GRU(input_size, hidden_size, dropout=0.5)
+
+    def forward(self, x, hidden):
+        ### x = (seq_len, batch_size, input_size)
+        #hidden = torch.zeros((1, x.shape[1], self.hidden_size)).to(self.device) ### (1, batch_size, hidden_size)
+        _, hidden = self.gru(x, hidden)
+        return hidden
 
 class RNNDecoder(nn.Module):
     def __init__(self, hidden_size, emb_size, vocab_size):
@@ -61,9 +74,10 @@ class RNNDecoder(nn.Module):
         return prediction, hidden
 
 class Img2seq(nn.Module):
-    def __init__(self, encoder, decoder, device):
+    def __init__(self, encoder, rnn_encoder,  decoder, device):
         super(Img2seq, self).__init__()
         self.encoder = encoder
+        self.rnn_encoder = rnn_encoder
         self.decoder = decoder
         self.device = device
         # middle layer
@@ -77,12 +91,12 @@ class Img2seq(nn.Module):
         trg_vocab_dim = self.decoder.vocab_size
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len, batch_size, trg_vocab_dim).to(self.device)
-        encoder_result = self.encoder(src)  ### hidden = (batch_size, 128, 20)
-        encoder_result = encoder_result.permute(2, 0, 1)
-        encoder_result = encoder_result
-        hidden = torch.zeros((1, batch_size,self.decoder.hidden_size)).double().to(self.device)
+        encoder_result = self.encoder(src)  ### encoder_result = (batch_size, 128, 20)
+        encoder_result = encoder_result.permute(2, 0, 1)  ### encoder_result = (20, batch_size, 128)
 
-        _, hidden = self.middle_gru(encoder_result, hidden)
+        hidden = torch.zeros((1, batch_size, self.rnn_encoder.hidden_size)).double().to(self.device)  ### (1, batch_size, hidden_size)
+        hidden = self.rnn_encoder(encoder_result, hidden)
+
         # hidden = [1, batch_size, hid_dim]
         input = trg[0, :]
         for t in range(1, max_len):
@@ -103,6 +117,7 @@ class Img2seq(nn.Module):
 
         encoder_result = self.encoder(src)  ### hidden = (batch_size, 128, 20)
         encoder_result = encoder_result.permute(2, 0, 1)
+        ## TODO
         hidden = torch.zeros((1, batch_size, self.decoder.hidden_size)).double().to(self.device)
         _, hidden = self.middle_gru(encoder_result, hidden)
 
@@ -128,8 +143,9 @@ if __name__ =="__main__":
     dev = torch.device("cpu")
 
     encoder = CNNEncoder(zip_size=40)
+    rnn_encoder = RNNEncoder(128, hidden_size)
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
-    img2seq = Img2seq(encoder, decoder, dev)
+    img2seq = Img2seq(encoder, rnn_encoder, decoder, dev)
 
     src = torch.rand((batch_size,1,200,30))
     trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
