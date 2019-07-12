@@ -12,7 +12,7 @@ class Trainer:
         self.model = model
         self.dataloader = dataloader
         self.validation_dataloader = validation_dataloader
-        self.optimizer = optim.Adam(self.model.parameters())
+        self.optimizer = optim.Adam(self.model.encoder.parameters())
         self.criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)
         self.dev = dev
 
@@ -85,7 +85,7 @@ class Trainer:
                 trg = trg.to(self.dev)
                 # src = [batch_size, 1, 200, 30]
                 # trg = [batch_Size, seq_len]
-                self.optimizer.zero_grad()
+                pretrain_optimizer.zero_grad()
                 trg = trg.permute(1, 0)
                 # trg = [trg sent len, batch size]
                 output = self.model(src, trg)
