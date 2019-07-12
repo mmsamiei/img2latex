@@ -18,6 +18,7 @@ class CNNEncoder(nn.Module):
         self.pool1 = nn.MaxPool2d(kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
+        self.dropout2d = nn.Dropout2d(p=0.5)
         self.pool2 = nn.MaxPool2d(kernel_size=3)
         self.dropout = nn.Dropout(p=0.5)
         self.output_size = output_size
@@ -28,9 +29,11 @@ class CNNEncoder(nn.Module):
         temp = x
         temp = F.leaky_relu(self.conv1(temp))
         temp = F.leaky_relu(self.conv2(temp))
+        temp = self.dropout2d(temp)
         temp = self.pool1(temp)
         temp = F.leaky_relu(self.conv3(temp))
         temp = F.leaky_relu(self.conv4(temp))
+        temp = self.dropout2d(temp)
         temp = self.pool2(temp)
         temp = temp.view(-1, 5120)
         temp = self.dropout(temp)

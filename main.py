@@ -34,10 +34,11 @@ if __name__ =="__main__":
                                                ToTensor("./Dataset/formulas/validation_formulas.txt", "token_dict.json", "token")
                                            ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,128)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,10000)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,1000)))
     hidden_size = 256
-    emb_size = 20
+    encoder_zip_size = 128
+    emb_size = 25
     with open(tokendict_file_addr) as handler:
         token_dict = json.load(handler)
     vocab_size = len(token_dict.keys())
@@ -45,7 +46,7 @@ if __name__ =="__main__":
 
     dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dev = torch.device('cuda')
-    encoder = CNNEncoder(hidden_size).double()
+    encoder = CNNEncoder(hidden_size ,encoder_zip_size).double()
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
     ## TODO double!!!
     img2seq = Img2seq(encoder, decoder, dev).to(dev)
@@ -64,9 +65,9 @@ if __name__ =="__main__":
         state_dict = torch.load(parsed_args.base_model)
         img2seq.load_state_dict(state_dict)
 
-    trainer.pretrain(3)
+    trainer.pretrain(5)
     print("number of model parameters! : ", trainer.count_parameters())
-    train_loss, valid_loss = trainer.train(5)
+    train_loss, valid_loss = trainer.train(30)
 
     print("train loss is : \n {}".format(train_loss))
     print("valid loss is : \n {}".format(valid_loss))
