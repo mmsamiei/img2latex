@@ -34,8 +34,8 @@ if __name__ =="__main__":
                                                ToTensor("./Dataset/formulas/validation_formulas.txt", "token_dict.json", "token")
                                            ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,10000)))
-    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,1000)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
     hidden_size = 256
     encoder_zip_size = 128
     emb_size = 25
@@ -65,7 +65,7 @@ if __name__ =="__main__":
         state_dict = torch.load(parsed_args.base_model)
         img2seq.load_state_dict(state_dict)
 
-    trainer.pretrain(5)
+    trainer.pretrain(3)
     print("number of model parameters! : ", trainer.count_parameters())
     train_loss, valid_loss = trainer.train(30)
 
