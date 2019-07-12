@@ -24,7 +24,7 @@ class Trainer:
         params = [p.numel() for p in self.model.parameters() if p.requires_grad]
         return sum(params)
 
-    def train_one_epoch(self, clip=10):
+    def train_one_epoch(self, clip=1000):
         self.model.train() #This will turn on dropout (and batch normalization)
         epoch_loss = 0
         for i, sample_batched in enumerate(self.dataloader):
