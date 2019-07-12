@@ -13,11 +13,11 @@ class CNNEncoder(nn.Module):
     def __init__(self, output_size=300, zip_size = 20):
         super(CNNEncoder, self).__init__()
         self.zip_size = zip_size
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
         self.pool1 = nn.MaxPool2d(kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
-        self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
+        self.conv4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3)
         self.dropout2d = nn.Dropout2d(p=0.5)
         self.pool2 = nn.MaxPool2d(kernel_size=3)
         self.dropout = nn.Dropout(p=0.5)
@@ -37,11 +37,8 @@ class CNNEncoder(nn.Module):
         temp = F.relu(self.conv4(temp))
         temp = self.dropout2d(temp)
         temp = self.pool2(temp)
-        temp = temp.view(-1, 5120)
-        temp = self.dropout(temp)
-        zip = self.fc_zip(temp)
-        temp = F.relu(self.fc(temp))
-        return temp, zip
+        temp = temp.view(temp.shape[0], temp.shape[1], -1)
+        return temp
 
 class RNNDecoder(nn.Module):
     def __init__(self, hidden_size, emb_size, vocab_size):
@@ -51,7 +48,7 @@ class RNNDecoder(nn.Module):
         self.vocab_size = vocab_size
     # layers
         self.embedding = nn.Embedding(vocab_size, emb_size)
-        self.gru = nn.GRU(emb_size, hidden_size)
+        self.gru = nn.GRU(emb_size, hidden_size, dropout=0.5)
         self.fc = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, input, hidden):
@@ -69,6 +66,8 @@ class Img2seq(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.device = device
+        # middle layer
+        self.middle_gru = nn.GRU(128, self.decoder.hidden_size, dropout=0.5)
 
     def forward(self, src, trg, teacher_forcing_rate = 0.99):
         # src = [batch_size, 1, 200, 30]
@@ -78,15 +77,16 @@ class Img2seq(nn.Module):
         trg_vocab_dim = self.decoder.vocab_size
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len, batch_size, trg_vocab_dim).to(self.device)
-        hidden, encoder_zip = self.encoder(src)
-        hidden = hidden.unsqueeze(0)
+        encoder_result = self.encoder(src)  ### hidden = (batch_size, 128, 20)
+        encoder_result = encoder_result.permute(2, 0, 1)
+        encoder_result = encoder_result
+        hidden = torch.zeros((1, batch_size,self.decoder.hidden_size)).double().to(self.device)
+
+        _, hidden = self.middle_gru(encoder_result, hidden)
         # hidden = [1, batch_size, hid_dim]
         input = trg[0, :]
         for t in range(1, max_len):
             output, hidden = self.decoder(input, hidden)
-            ###
-            hidden[0,:,:self.encoder.zip_size] = encoder_zip
-            ###
             outputs[t] = output
             teacher_forcing = random.random() < teacher_forcing_rate
             top1 = output.max(1)[1]
@@ -100,16 +100,17 @@ class Img2seq(nn.Module):
         trg_vocab_dim = self.decoder.vocab_size
         # tensor to store decoder outputs
         results = torch.zeros(batch_size, max_len)
-        hidden, encoder_zip = self.encoder(src)
-        hidden = hidden.unsqueeze(0)
+
+        encoder_result = self.encoder(src)  ### hidden = (batch_size, 128, 20)
+        encoder_result = encoder_result.permute(2, 0, 1)
+        hidden = torch.zeros((1, batch_size, self.decoder.hidden_size)).double().to(self.device)
+        _, hidden = self.middle_gru(encoder_result, hidden)
+
         # hidden = [1, batch_size, hid_dim]
         input = torch.LongTensor(batch_size).fill_(start_token_index).to(self.device)
         results[:, 0] = input
         for t in range(1, max_len):
             output, hidden = self.decoder(input, hidden)
-            ###
-            hidden[0, :, :self.encoder.zip_size] = encoder_zip
-            ###
             top1 = output.max(1)[1]
             input = top1
             results[:, t] = top1
