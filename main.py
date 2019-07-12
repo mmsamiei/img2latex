@@ -34,8 +34,8 @@ if __name__ =="__main__":
                                                ToTensor("./Dataset/formulas/validation_formulas.txt", "token_dict.json", "token")
                                            ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
-    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,100)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,1000)))
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(1,200)))
     hidden_size = 256
     encoder_zip_size = 128
     emb_size = 25
@@ -65,9 +65,9 @@ if __name__ =="__main__":
         state_dict = torch.load(parsed_args.base_model)
         img2seq.load_state_dict(state_dict)
 
-    trainer.pretrain(3)
+    #trainer.pretrain(1)
     print("number of model parameters! : ", trainer.count_parameters())
-    train_loss, valid_loss = trainer.train(30)
+    train_loss, valid_loss = trainer.train(1)
 
     print("train loss is : \n {}".format(train_loss))
     print("valid loss is : \n {}".format(valid_loss))
@@ -78,12 +78,22 @@ if __name__ =="__main__":
     plt.show()
     fig.savefig("test.png")
 
-    for i_batch, sample_batched in enumerate(dataloader):
+
+    train_dataloader_generation = DataLoader(validation_transformed_dataset, batch_size=64, drop_last=False, sampler=SubsetRandomSampler(range(1,200)))
+
+
+    str_list = []
+    for i_batch, sample_batched in enumerate(train_dataloader_generation):
          images = sample_batched['src'].to(dev)
-         result = img2seq.greedy_inference(images, token_dict['<start>'], 50)
-         str = token_index.translate_to_token(result[0])
-         str = token_index.translate_to_token(result[1])
-         print(str)
+         result = img2seq.greedy_inference(images, token_dict['<start>'], 70)
+         for i, tensor in enumerate(result):
+            str = token_index.translate_to_token(tensor)
+            str_list.append(str)
+
+    with open('submit.txt', 'w') as f:
+        for item in str_list:
+            f.write("%s\n" % item)
+
     # for i_batch, sample_batched in enumerate(dataloader):
     #      print(i_batch)
     #      images = sample_batched['src']
