@@ -44,7 +44,7 @@ class Trainer:
             # output = [(trg sent len - 1) * batch size, output dim]
             loss = self.criterion(output, trg)
             loss.backward()
-            nn.utils.clip_grad_norm_(self.model.parameters(), clip)
+            #nn.utils.clip_grad_norm_(self.model.parameters(), clip)
             self.optimizer.step()
             epoch_loss += loss.item()
         return epoch_loss/len(self.dataloader)
