@@ -12,7 +12,7 @@ class Trainer:
         self.model = model
         self.dataloader = dataloader
         self.validation_dataloader = validation_dataloader
-        self.optimizer = optim.Adam(self.model.encoder.parameters())
+        self.optimizer = optim.Adam(self.model.parameters())
         self.criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)
         self.dev = dev
 
