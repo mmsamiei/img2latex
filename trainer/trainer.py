@@ -91,7 +91,7 @@ class Trainer:
                 ###output = self.model(src, trg)
                 # output = [trg sent len, batch size, output dim]
 
-                hidden = torch.zeros((1, trg.shape[1], self.model.rnn_encoder.hidden_size)).double().to(self.dev)
+                hidden = torch.zeros((1, trg.shape[1], self.model.rnn_encoder.hidden_size)).to(self.dev)
                 outputs = torch.zeros(trg.shape[0], trg.shape[1], self.model.decoder.vocab_size).to(self.dev)
                 input = trg[0, :]
                 for t in range(1, trg.shape[0]):
