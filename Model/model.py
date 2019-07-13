@@ -142,12 +142,12 @@ if __name__ =="__main__":
     batch_size = 64
     dev = torch.device("cpu")
 
-    encoder = CNNEncoder(zip_size=40)
-    rnn_encoder = RNNEncoder(128, hidden_size)
-    decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
-    img2seq = Img2seq(encoder, rnn_encoder, decoder, dev)
+    encoder = CNNEncoder(zip_size=40).double()
+    rnn_encoder = RNNEncoder(128, hidden_size).double()
+    decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
+    img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).double()
 
-    src = torch.rand((batch_size,1,200,30))
+    src = torch.rand((batch_size,1,200,30)).double()
     trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
     res = img2seq(src, trg)
     print(res.shape)
