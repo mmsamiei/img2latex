@@ -15,11 +15,11 @@ class CNNEncoder(nn.Module):
         self.zip_size = zip_size
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
-        self.pool1 = nn.MaxPool2d(kernel_size=3)
+        self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3)
         self.dropout2d = nn.Dropout2d(p=0.5)
-        self.pool2 = nn.MaxPool2d(kernel_size=3)
+        self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2)
         self.dropout = nn.Dropout(p=0.5)
         self.output_size = output_size
         self.fc_zip = nn.Linear(5120, zip_size)
@@ -142,20 +142,20 @@ if __name__ =="__main__":
     batch_size = 64
     dev = torch.device("cpu")
 
-    encoder = CNNEncoder(zip_size=40)
-    rnn_encoder = RNNEncoder(128, hidden_size)
-    decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
-    img2seq = Img2seq(encoder, rnn_encoder, decoder, dev)
+    encoder = CNNEncoder(zip_size=40).double()
+    rnn_encoder = RNNEncoder(128, hidden_size).double()
+    decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
+    img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).double()
 
-    src = torch.rand((batch_size,1,200,30))
+    src = torch.rand((batch_size,1,400,60)).double()
     trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
     res = img2seq(src, trg)
     print(res.shape)
 
 
     print("**** test inference part! ***")
-    handler1 = open("token_dict.json")
-    token_dict = json.load(handler1)
-    result = img2seq.greedy_inference(src, token_dict['<start>'], 40)
-    print(result.shape)
-    print(result)
+    # handler1 = open("token_dict.json")
+    # token_dict = json.load(handler1)
+    # result = img2seq.greedy_inference(src, token_dict['<start>'], 40)
+    # print(result.shape)
+    # print(result)

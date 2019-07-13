@@ -88,12 +88,25 @@ class Trainer:
                 pretrain_optimizer.zero_grad()
                 trg = trg.permute(1, 0)
                 # trg = [trg sent len, batch size]
-                output = self.model(src, trg)
+                ###output = self.model(src, trg)
                 # output = [trg sent len, batch size, output dim]
+
+                hidden = torch.zeros((1, trg.shape[1], self.model.rnn_encoder.hidden_size)).double().to(self.dev)
+                outputs = torch.zeros(trg.shape[0], trg.shape[1], self.model.decoder.vocab_size).to(self.dev)
+                input = trg[0, :]
+                for t in range(1, trg.shape[0]):
+                    output, hidden = self.model.decoder(input, hidden)
+                    outputs[t] = output
+                    top1 = output.max(1)[1]
+                    input = trg[t]
+
+
                 trg = trg[1:].contiguous().view(-1)
                 # trg = [(trg sent len - 1) * batch size]
-                output = output[1:].view(-1, output.shape[-1])
+                output = outputs[1:].view(-1, outputs.shape[-1])
                 # output = [(trg sent len - 1) * batch size, output dim]
+
+
                 loss = self.criterion(output, trg)
                 loss.backward()
                 pretrain_optimizer.step()

@@ -37,9 +37,9 @@ if __name__ == "__main__":
                                                       ]))
 
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True,
-                            sampler=SubsetRandomSampler(range(1, 70)))
+                            sampler=SubsetRandomSampler(range(0, 100)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True,
-                                       sampler=SubsetRandomSampler(range(1, 70)))
+                                       sampler=SubsetRandomSampler(range(1, 100)))
     hidden_size = 128
     encoder_zip_size = 64
     emb_size = 20
@@ -70,8 +70,8 @@ if __name__ == "__main__":
 
     train = True
     if train:
-        #trainer.pretrain(3)
-        train_loss, valid_loss = trainer.train(50)
+        trainer.pretrain(3)
+        train_loss, valid_loss = trainer.train(10)
         print("train loss is : \n {}".format(train_loss))
         print("valid loss is : \n {}".format(valid_loss))
 
