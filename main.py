@@ -37,18 +37,18 @@ if __name__ == "__main__":
                                                       ]))
 
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True,
-                            sampler=SubsetRandomSampler(range(0, 10000)))
+                            sampler=SubsetRandomSampler(range(0, 64)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True,
-                                       sampler=SubsetRandomSampler(range(0, 1000)))
-    hidden_size = 128
-    encoder_zip_size = 64
+                                       sampler=SubsetRandomSampler(range(0, 64)))
+    hidden_size = 256
+    encoder_zip_size = 128
     emb_size = 20
     with open(tokendict_file_addr) as handler:
         token_dict = json.load(handler)
     vocab_size = len(token_dict.keys())
     dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     encoder = CNNEncoder(hidden_size, encoder_zip_size)
-    rnn_encoder = RNNEncoder(128, hidden_size)
+    rnn_encoder = RNNEncoder(256, hidden_size)
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
     img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).to(dev)
 
@@ -69,8 +69,8 @@ if __name__ == "__main__":
 
     train = True
     if train:
-        trainer.pretrain(10)
-        train_loss, valid_loss = trainer.train(100)
+        #trainer.pretrain(10)
+        train_loss, valid_loss = trainer.train(20)
         print("train loss is : \n {}".format(train_loss))
         print("valid loss is : \n {}".format(valid_loss))
 
