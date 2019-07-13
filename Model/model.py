@@ -27,14 +27,14 @@ class CNNEncoder(nn.Module):
     def forward(self, x):
         temp = x
         temp = F.relu(self.conv1(temp))
-        temp = self.dropout2d(temp)
+        #temp = self.dropout2d(temp)
         temp = F.relu(self.conv2(temp))
-        temp = self.dropout2d(temp)
+        #temp = self.dropout2d(temp)
         temp = self.pool1(temp)
         temp = F.relu(self.conv3(temp))
-        temp = self.dropout2d(temp)
+        #temp = self.dropout2d(temp)
         temp = F.relu(self.conv4(temp))
-        temp = self.dropout2d(temp)
+        #temp = self.dropout2d(temp)
         temp = self.pool2(temp)
         temp = temp.view(temp.shape[0], temp.shape[1], -1)
         temp2 = temp.view(-1, temp.shape[1] * temp.shape[2])
