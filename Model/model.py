@@ -37,7 +37,6 @@ class CNNEncoder(nn.Module):
         #temp = self.dropout2d(temp)
         temp = self.pool2(temp)
         temp = temp.view(temp.shape[0], temp.shape[1], -1)
-        temp2 = temp.view(-1, temp.shape[1] * temp.shape[2])
         return temp
 
 class RNNEncoder(nn.Module):
@@ -139,7 +138,7 @@ if __name__ =="__main__":
     hidden_size = 300
     emb_size = 20
     vocab_size = 50
-    batch_size = 64
+    batch_size = 1
     dev = torch.device("cpu")
 
     encoder = CNNEncoder(zip_size=40).double()
@@ -147,7 +146,7 @@ if __name__ =="__main__":
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
     img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).double()
 
-    src = torch.rand((batch_size,1,200,30)).double()
+    src = torch.rand((batch_size,1,300,45)).double()
     trg = torch.LongTensor(40, batch_size).random_(0,vocab_size)
     res = img2seq(src, trg)
     print(res.shape)

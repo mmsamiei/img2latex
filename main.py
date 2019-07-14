@@ -23,7 +23,7 @@ if __name__ == "__main__":
     batch_size = 64
     transformed_dataset = Img2LatexDataset("./Dataset/images/images_train", "./Dataset/formulas/train_formulas.txt",
                                            transform=transforms.Compose([
-                                               Rescale((200, 30)),
+                                               Rescale((300, 45)),
                                                ToTensor("./Dataset/formulas/train_formulas.txt", "token_dict.json",
                                                         "token")
                                            ]))
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     validation_transformed_dataset = Img2LatexDataset("./Dataset/images/images_validation",
                                                       "./Dataset/formulas/validation_formulas.txt",
                                                       transform=transforms.Compose([
-                                                          Rescale((200, 30)),
+                                                          Rescale((300, 45)),
                                                           ToTensor("./Dataset/formulas/validation_formulas.txt",
                                                                    "token_dict.json", "token")
                                                       ]))
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     train = True
     if train:
         #trainer.pretrain_encoders(5)
-        trainer.pretrain_cnn(5)
-        #trainer.pretrain_decoder(20)
+        trainer.pretrain_cnn(40)
+        trainer.pretrain_decoder(20)
         train_loss, valid_loss = trainer.train(20)
         print("train loss is : \n {}".format(train_loss))
         print("valid loss is : \n {}".format(valid_loss))
