@@ -15,14 +15,14 @@ class CNNEncoder(nn.Module):
         self.zip_size = zip_size
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3)
-        self.pool1 = nn.MaxPool2d(kernel_size=3)
+        self.pool1 = nn.AvgPool2d(kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
-        self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
+        self.conv4 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3)
         self.dropout2d = nn.Dropout2d(p=0.5)
-        self.pool2 = nn.MaxPool2d(kernel_size=3)
+        self.pool2 = nn.AvgPool2d(kernel_size=3)
         self.dropout = nn.Dropout(p=0.5)
         self.output_size = output_size
-        self.fc_zip = nn.Linear(5120, zip_size)
+        self.fc_zip = nn.Linear(2560, zip_size)
 
     def forward(self, x):
         temp = x
@@ -38,8 +38,7 @@ class CNNEncoder(nn.Module):
         temp = self.pool2(temp)
         temp = temp.view(temp.shape[0], temp.shape[1], -1)
         temp2 = temp.view(-1, temp.shape[1] * temp.shape[2])
-        cnn_zip = self.fc_zip(temp2)
-        return temp, cnn_zip
+        return temp
 
 class RNNEncoder(nn.Module):
     def __init__(self, input_size, hidden_size):
@@ -65,12 +64,14 @@ class RNNDecoder(nn.Module):
         self.embedding = nn.Embedding(vocab_size, emb_size)
         self.gru = nn.GRU(emb_size, hidden_size, dropout=0.5)
         self.fc = nn.Linear(hidden_size, vocab_size)
+        self.dropout = nn.Dropout(p = 0.5)
 
     def forward(self, input, hidden):
         # input = [batch_size]
         # hidden = [1, batch_size, hid_dim]
         temp = input.unsqueeze(0) # temp = [1, batch_size]
         temp = self.embedding(temp)  # temp = [1, batch_size, emb_dim]
+        temp = self.dropout(temp)
         output, hidden = self.gru(temp, hidden)  # output = [1, batch_size, hid_dim]
         prediction = self.fc(output.squeeze(0)) # prediction = p[batch_size, hid_dim]
         return prediction, hidden
@@ -91,7 +92,7 @@ class Img2seq(nn.Module):
         trg_vocab_dim = self.decoder.vocab_size
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len, batch_size, trg_vocab_dim).to(self.device)
-        encoder_result, encoder_zip = self.encoder(src)  ### encoder_result = (batch_size, 128, 20)
+        encoder_result = self.encoder(src)  ### encoder_result = (batch_size, 128, 20)
         encoder_result = encoder_result.permute(2, 0, 1)  ### encoder_result = (20, batch_size, 128)
 
         hidden = torch.zeros((1, batch_size, self.rnn_encoder.hidden_size)).double().to(self.device)  ### (1, batch_size, hidden_size)
@@ -115,7 +116,7 @@ class Img2seq(nn.Module):
         # tensor to store decoder outputs
         results = torch.zeros(batch_size, max_len)
 
-        encoder_result, encoder_zip = self.encoder(src)  ### hidden = (batch_size, 128, 20)
+        encoder_result = self.encoder(src)  ### hidden = (batch_size, 128, 20)
         encoder_result = encoder_result.permute(2, 0, 1)
         ## TODO
         hidden = torch.zeros((1, batch_size, self.decoder.hidden_size)).double().to(self.device)
@@ -142,7 +143,7 @@ if __name__ =="__main__":
     dev = torch.device("cpu")
 
     encoder = CNNEncoder(zip_size=40).double()
-    rnn_encoder = RNNEncoder(256, hidden_size).double()
+    rnn_encoder = RNNEncoder(128, hidden_size).double()
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size).double()
     img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).double()
 

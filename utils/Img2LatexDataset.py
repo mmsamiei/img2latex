@@ -82,11 +82,10 @@ class ToTensor(object):
                     formula_tensor[i] = self.char_dict['<UNK>']
                     continue
                 formula_tensor[i] = self.char_dict[c]
-            return {'src': torch.from_numpy(image).unsqueeze(0), 'trg': formula_tensor}
+            return {'src': torch.from_numpy(image).unsqueeze(0).float(), 'trg': formula_tensor}
 
 if __name__ == "__main__":
     print("hi")
-    pari_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt")
     transformed_dataset = Img2LatexDataset(".././Dataset/images/images_train",".././Dataset/formulas/train_formulas.txt",
                                             transform=transforms.Compose([
                                                 Rescale((200, 30)),

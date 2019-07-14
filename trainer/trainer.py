@@ -1,11 +1,12 @@
 from torch import nn
 import torch
 from torch import optim
+import torch.nn.functional as F
 import time
 import os
 import datetime
 from utils.TokenIndex import *
-
+import torchvision
 
 class Trainer:
     def __init__(self, model, dataloader, validation_dataloader, PAD_IDX, dev):
@@ -18,13 +19,13 @@ class Trainer:
 
     def init_weights(self):
         for name, param in self.model.named_parameters():
-            nn.init.uniform_(param.data, -0.09, 0.09)
+            nn.init.uniform_(param.data, -0.5, 0.5)
 
     def count_parameters(self):
         params = [p.numel() for p in self.model.parameters() if p.requires_grad]
         return sum(params)
 
-    def train_one_epoch(self, clip=1000):
+    def train_one_epoch(self, clip=100):
         self.model.train() #This will turn on dropout (and batch normalization)
         epoch_loss = 0
         for i, sample_batched in enumerate(self.dataloader):
@@ -44,7 +45,7 @@ class Trainer:
             # output = [(trg sent len - 1) * batch size, output dim]
             loss = self.criterion(output, trg)
             loss.backward()
-            #nn.utils.clip_grad_norm_(self.model.parameters(), clip)
+            nn.utils.clip_grad_norm_(self.model.parameters(), clip)
             self.optimizer.step()
             epoch_loss += loss.item()
         return epoch_loss/len(self.dataloader)
@@ -74,7 +75,84 @@ class Trainer:
             self.inference_one_sample()
         return epoch_losses, valid_losses
 
-    def pretrain(self, N_epoch):
+    def pretrain_encoders(self, N_epoch):
+        self.model.train()
+        pretrain_optimizer = optim.Adam(self.model.parameters())
+        print("sadsadas asd sad ad sda ")
+        print(type(self.model.parameters()))
+        for i_epoch in range(N_epoch):
+            epoch_loss = 0
+            for i, sample_batched in enumerate(self.dataloader):
+                src, trg = sample_batched['src'], sample_batched['trg']
+                src = src.to(self.dev)
+                trg = trg.to(self.dev)
+                # src = [batch_size, 1, 200, 30]
+                # trg = [batch_Size, seq_len]
+                pretrain_optimizer.zero_grad()
+                trg = trg.permute(1, 0)
+                # trg = [trg sent len, batch size]
+                ###output = self.model(src, trg)
+                # output = [trg sent len, batch size, output dim]
+
+                encoder_result = self.model.encoder(src)  ### encoder_result = (batch_size, 128, 20)
+                encoder_result = encoder_result.permute(2, 0, 1)  ### encoder_result = (20, batch_size, 128)
+                hidden = torch.zeros((1, trg.shape[1], self.model.rnn_encoder.hidden_size)).to(self.dev)
+                hidden = self.model.rnn_encoder(encoder_result, hidden)
+
+                outputs = torch.zeros(trg.shape[0], trg.shape[1], self.model.decoder.vocab_size).to(self.dev)
+                input = trg[0, :]
+                for t in range(1, trg.shape[0]):
+                    output, hidden = self.model.decoder(input, hidden)
+                    outputs[t] = output
+                    top1 = output.max(1)[1]
+                    input = trg[t]
+
+                trg = trg[1:].contiguous().view(-1)
+                # trg = [(trg sent len - 1) * batch size]
+                output = outputs[1:].view(-1, outputs.shape[-1])
+                # output = [(trg sent len - 1) * batch size, output dim]
+
+                loss = self.criterion(output, trg)
+                loss.backward()
+                pretrain_optimizer.step()
+                epoch_loss += loss
+            epoch_loss = epoch_loss / len(self.dataloader)
+            print("pretrain-encoders epoch {} finished loss is {}".format(i_epoch, epoch_loss))
+
+    def pretrain_cnn(self, N_epoch):
+        self.model.train()
+        my_deconv1 = nn.ConvTranspose2d(128, 64, 3, 2).to(self.dev)
+        my_deconv2 = nn.ConvTranspose2d(64, 16, 3, 2).to(self.dev)
+        my_deconv3 = nn.ConvTranspose2d(16, 1, 3, (2,3 )).to(self.dev)
+        params = list(self.model.encoder.parameters()) + list(my_deconv1.parameters()) + list(my_deconv2.parameters()) \
+                 + list(my_deconv3.parameters())
+        pretrain_optimizer = optim.Adam(params)
+        for i_epoch in range(N_epoch):
+            epoch_loss = 0
+            for i, sample_batched in enumerate(self.dataloader):
+                src, trg = sample_batched['src'], sample_batched['trg']
+                src = src.to(self.dev)
+                trg = trg.to(self.dev)
+                # src = [batch_size, 1, 200, 30]
+                # trg = [batch_Size, seq_len]
+                pretrain_optimizer.zero_grad()
+                trg = trg.permute(1, 0)
+                # trg = [trg sent len, batch size]
+                encoder_result = self.model.encoder(src)
+                temp = my_deconv1(encoder_result.unsqueeze(3))
+                temp = my_deconv2(temp)
+                temp = my_deconv3(temp)
+                my_target = src[:,:,:167,5:21+5]
+                loss = F.mse_loss(temp, my_target)
+                loss.backward()
+                pretrain_optimizer.step()
+                epoch_loss += loss
+            epoch_loss = epoch_loss / len(self.dataloader)
+            print("pretrain-cnn epoch {} finished loss is {}".format(i_epoch, epoch_loss))
+
+
+
+    def pretrain_decoder(self, N_epoch):
         self.model.train()
         pretrain_optimizer = optim.Adam(self.model.decoder.parameters())
         for i_epoch in range(N_epoch):
@@ -112,7 +190,7 @@ class Trainer:
                 pretrain_optimizer.step()
                 epoch_loss += loss
             epoch_loss = epoch_loss / len(self.dataloader)
-            print("pretrain epoch {} finished loss is {}".format(i_epoch, epoch_loss))
+            print("pretrain-rnn-decoder epoch {} finished loss is {}".format(i_epoch, epoch_loss))
 
 
     def evaluate(self):
