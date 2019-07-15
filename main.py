@@ -20,10 +20,10 @@ if __name__ == "__main__":
     parser.add_argument('-base', dest='base_model')
     parsed_args = parser.parse_args()
 
-    batch_size = 64
+    batch_size = 1
     transformed_dataset = Img2LatexDataset("./Dataset/images/images_train", "./Dataset/formulas/train_formulas.txt",
                                            transform=transforms.Compose([
-                                               Rescale((300, 45)),
+                                               Rescale((400, 60)),
                                                ToTensor("./Dataset/formulas/train_formulas.txt", "token_dict.json",
                                                         "token")
                                            ]))
@@ -31,24 +31,23 @@ if __name__ == "__main__":
     validation_transformed_dataset = Img2LatexDataset("./Dataset/images/images_validation",
                                                       "./Dataset/formulas/validation_formulas.txt",
                                                       transform=transforms.Compose([
-                                                          Rescale((300, 45)),
+                                                          Rescale((400, 60)),
                                                           ToTensor("./Dataset/formulas/validation_formulas.txt",
                                                                    "token_dict.json", "token")
                                                       ]))
 
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True,
-                            sampler=SubsetRandomSampler(range(0, 10000)))
+                            sampler=SubsetRandomSampler(range(0, 60000)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True,
                                        sampler=SubsetRandomSampler(range(0, 1000)))
-    hidden_size = 128
-    encoder_zip_size = 128
+    hidden_size = 512
     emb_size = 30
     with open(tokendict_file_addr) as handler:
         token_dict = json.load(handler)
     vocab_size = len(token_dict.keys())
     dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    encoder = CNNEncoder(hidden_size, encoder_zip_size)
-    rnn_encoder = RNNEncoder(128, hidden_size)
+    encoder = CNNEncoder()
+    rnn_encoder = RNNEncoder(512, hidden_size)
     decoder = RNNDecoder(hidden_size, emb_size, vocab_size)
     img2seq = Img2seq(encoder, rnn_encoder, decoder, dev).to(dev)
 
@@ -70,8 +69,9 @@ if __name__ == "__main__":
     train = True
     if train:
         #trainer.pretrain_encoders(5)
-        trainer.pretrain_cnn(40)
-        trainer.pretrain_decoder(20)
+        #trainer.pretrain_cnn(10)
+        #trainer.pretrain_encoders(30)
+        #trainer.pretrain_decoder(10)
         train_loss, valid_loss = trainer.train(20)
         print("train loss is : \n {}".format(train_loss))
         print("valid loss is : \n {}".format(valid_loss))
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     str_list = []
     for i_batch, sample_batched in enumerate(validation_dataloader_generation):
         images = sample_batched['src'].to(dev)
-        result = img2seq.greedy_inference(images, token_dict['<start>'], 70)
+        result = img2seq.greedy_inference(images, token_dict['<start>'], 120)
         for i, tensor in enumerate(result):
             str = token_index.translate_to_token(tensor)
             str_list.append(str)

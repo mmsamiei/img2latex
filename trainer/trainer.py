@@ -18,8 +18,7 @@ class Trainer:
         self.dev = dev
 
     def init_weights(self):
-        for name, param in self.model.named_parameters():
-            nn.init.uniform_(param.data, -0.5, 0.5)
+        return
 
     def count_parameters(self):
         params = [p.numel() for p in self.model.parameters() if p.requires_grad]
@@ -77,9 +76,8 @@ class Trainer:
 
     def pretrain_encoders(self, N_epoch):
         self.model.train()
-        pretrain_optimizer = optim.Adam(self.model.parameters())
-        print("sadsadas asd sad ad sda ")
-        print(type(self.model.parameters()))
+        my_gru = nn.GRU(self.model.rnn_encoder.hidden_size, self.model.decoder.vocab_size).to(self.dev)
+        pretrain_optimizer = optim.Adam(self.model.encoder.parameters())
         for i_epoch in range(N_epoch):
             epoch_loss = 0
             for i, sample_batched in enumerate(self.dataloader):
@@ -94,18 +92,16 @@ class Trainer:
                 ###output = self.model(src, trg)
                 # output = [trg sent len, batch size, output dim]
 
-                encoder_result = self.model.encoder(src)  ### encoder_result = (batch_size, 128, 20)
-                encoder_result = encoder_result.permute(2, 0, 1)  ### encoder_result = (20, batch_size, 128)
-                hidden = torch.zeros((1, trg.shape[1], self.model.rnn_encoder.hidden_size)).to(self.dev)
-                hidden = self.model.rnn_encoder(encoder_result, hidden)
+                encoder_result = self.model.encoder(src)  ### encoder_result = (batch_size, 128, 93)
+                encoder_result = encoder_result.permute(2, 0, 1)  ### encoder_result = (93, batch_size, 128)
 
+
+                hidden = torch.zeros((1, trg.shape[1], self.model.rnn_encoder.hidden_size)).to(self.dev)
+                hidden = torch.zeros((1, 64, 566)).to(self.dev)
+                #hidden = encoder_result[0, :, :].unsqueeze(0).contiguous()
                 outputs = torch.zeros(trg.shape[0], trg.shape[1], self.model.decoder.vocab_size).to(self.dev)
-                input = trg[0, :]
-                for t in range(1, trg.shape[0]):
-                    output, hidden = self.model.decoder(input, hidden)
-                    outputs[t] = output
-                    top1 = output.max(1)[1]
-                    input = trg[t]
+
+                output, hidden = my_gru(encoder_result, hidden)
 
                 trg = trg[1:].contiguous().view(-1)
                 # trg = [(trg sent len - 1) * batch size]
@@ -121,9 +117,9 @@ class Trainer:
 
     def pretrain_cnn(self, N_epoch):
         self.model.train()
-        my_deconv1 = nn.ConvTranspose2d(128, 64, 3, 2).to(self.dev)
-        my_deconv2 = nn.ConvTranspose2d(64, 16, 3, 2).to(self.dev)
-        my_deconv3 = nn.ConvTranspose2d(16, 1, 3, (2,3 )).to(self.dev)
+        my_deconv1 = nn.ConvTranspose2d(512, 64, 3, 2).to(self.dev)
+        my_deconv2 = nn.ConvTranspose2d(64, 16, 3, (1,2)).to(self.dev)
+        my_deconv3 = nn.ConvTranspose2d(16, 1, 3, (1,3)).to(self.dev)
         params = list(self.model.encoder.parameters()) + list(my_deconv1.parameters()) + list(my_deconv2.parameters()) \
                  + list(my_deconv3.parameters())
         pretrain_optimizer = optim.Adam(params)
@@ -142,7 +138,7 @@ class Trainer:
                 temp = my_deconv1(encoder_result.unsqueeze(3))
                 temp = my_deconv2(temp)
                 temp = my_deconv3(temp)
-                my_target = src[:,:,:167,5:21+5]
+                my_target = src[:,:,:205,5:21+5]
                 loss = F.mse_loss(temp, my_target)
                 loss.backward()
                 pretrain_optimizer.step()
@@ -222,7 +218,6 @@ class Trainer:
             ##TODO
             result = self.model.greedy_inference(images, 18, 50)
             str = token_index.translate_to_token(result[0])
-            str = token_index.translate_to_token(result[1])
             print("generated sample: {}".format(str))
         return
 
