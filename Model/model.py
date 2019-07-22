@@ -18,9 +18,9 @@ class CNNEncoder(nn.Module):
         self.pool2 = nn.MaxPool2d(kernel_size=2)
         self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
         self.conv4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3)
-        self.pool3 = nn.MaxPool2d(kernel_size=(2,1))
+        self.pool3 = nn.MaxPool2d(kernel_size=(1,2), stride=(1,2))
         self.conv5 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3)
-        self.pool4 = nn.MaxPool2d(kernel_size=(2,1))
+        self.pool4 = nn.MaxPool2d(kernel_size=(2,1), stride=(2,1))
         self.conv6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3)
 
     def forward(self, x):

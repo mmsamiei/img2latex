@@ -10,7 +10,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 
 class Img2LatexDataset(Dataset):
 
-    def __init__(self, img_dir, formula_file, transform=None):
+    def __init__(self, img_dir, formula_file=None, transform=None):
         self.img_dir = img_dir
         self.formula_file = formula_file
         self.transform = transform

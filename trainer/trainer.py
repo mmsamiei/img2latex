@@ -117,9 +117,9 @@ class Trainer:
 
     def pretrain_cnn(self, N_epoch):
         self.model.train()
-        my_deconv1 = nn.ConvTranspose2d(512, 64, 3, 2).to(self.dev)
-        my_deconv2 = nn.ConvTranspose2d(64, 16, 3, (1,2)).to(self.dev)
-        my_deconv3 = nn.ConvTranspose2d(16, 1, 3, (1,3)).to(self.dev)
+        my_deconv1 = nn.ConvTranspose2d(512, 64, (2,3), (2,3)).to(self.dev)
+        my_deconv2 = nn.ConvTranspose2d(64, 16, (2,3), (2,3)).to(self.dev)
+        my_deconv3 = nn.ConvTranspose2d(16, 1, (2,3), (2,3)).to(self.dev)
         params = list(self.model.encoder.parameters()) + list(my_deconv1.parameters()) + list(my_deconv2.parameters()) \
                  + list(my_deconv3.parameters())
         pretrain_optimizer = optim.Adam(params)
@@ -138,6 +138,7 @@ class Trainer:
                 temp = my_deconv1(encoder_result.unsqueeze(3))
                 temp = my_deconv2(temp)
                 temp = my_deconv3(temp)
+                print("sasdasad   ", temp.shape)
                 my_target = src[:,:,:205,5:21+5]
                 loss = F.mse_loss(temp, my_target)
                 loss.backward()

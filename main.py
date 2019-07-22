@@ -20,10 +20,10 @@ if __name__ == "__main__":
     parser.add_argument('-base', dest='base_model')
     parsed_args = parser.parse_args()
 
-    batch_size = 1
+    batch_size = 128
     transformed_dataset = Img2LatexDataset("./Dataset/images/images_train", "./Dataset/formulas/train_formulas.txt",
                                            transform=transforms.Compose([
-                                               Rescale((400, 60)),
+                                               Rescale((60, 400)),
                                                ToTensor("./Dataset/formulas/train_formulas.txt", "token_dict.json",
                                                         "token")
                                            ]))
@@ -31,13 +31,21 @@ if __name__ == "__main__":
     validation_transformed_dataset = Img2LatexDataset("./Dataset/images/images_validation",
                                                       "./Dataset/formulas/validation_formulas.txt",
                                                       transform=transforms.Compose([
-                                                          Rescale((400, 60)),
+                                                          Rescale((60, 400)),
+                                                          ToTensor("./Dataset/formulas/validation_formulas.txt",
+                                                                   "token_dict.json", "token")
+                                                      ]))
+
+    test_transformed_dataset = Img2LatexDataset("./Dataset/images/images_test",
+                                                      "./Dataset/formulas/validation_formulas.txt",
+                                                      transform=transforms.Compose([
+                                                          Rescale((60, 400)),
                                                           ToTensor("./Dataset/formulas/validation_formulas.txt",
                                                                    "token_dict.json", "token")
                                                       ]))
 
     dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True,
-                            sampler=SubsetRandomSampler(range(0, 60000)))
+                            sampler=SubsetRandomSampler(range(0, 10000)))
     validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True,
                                        sampler=SubsetRandomSampler(range(0, 1000)))
     hidden_size = 512
@@ -70,8 +78,8 @@ if __name__ == "__main__":
     if train:
         #trainer.pretrain_encoders(5)
         #trainer.pretrain_cnn(10)
-        #trainer.pretrain_encoders(30)
-        #trainer.pretrain_decoder(10)
+        #trainer.pretrain_encoders(1)
+        trainer.pretrain_decoder(2)
         train_loss, valid_loss = trainer.train(20)
         print("train loss is : \n {}".format(train_loss))
         print("valid loss is : \n {}".format(valid_loss))
@@ -82,7 +90,7 @@ if __name__ == "__main__":
         plt.show()
         fig.savefig("test.png")
 
-    validation_dataloader_generation = DataLoader(validation_transformed_dataset, batch_size=64, drop_last=False)
+    validation_dataloader_generation = DataLoader(test_transformed_dataset, batch_size=64, drop_last=False)
 
     str_list = []
     for i_batch, sample_batched in enumerate(validation_dataloader_generation):
