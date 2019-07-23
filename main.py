@@ -37,17 +37,15 @@ if __name__ == "__main__":
                                                       ]))
 
     test_transformed_dataset = Img2LatexDataset("./Dataset/images/images_test",
-                                                      "./Dataset/formulas/validation_formulas.txt",
+                                                      "./Dataset/formulas/train_formulas.txt",
                                                       transform=transforms.Compose([
                                                           Rescale((60, 400)),
-                                                          ToTensor("./Dataset/formulas/validation_formulas.txt",
+                                                          ToTensor("./Dataset/formulas/train_formulas.txt",
                                                                    "token_dict.json", "token")
                                                       ]))
 
-    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True,
-                            sampler=SubsetRandomSampler(range(0, 10000)))
-    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True,
-                                       sampler=SubsetRandomSampler(range(0, 1000)))
+    dataloader = DataLoader(transformed_dataset, batch_size=batch_size, drop_last=True, sampler=SubsetRandomSampler(range(0, 10000)))
+    validation_dataloader = DataLoader(validation_transformed_dataset, batch_size=batch_size, drop_last=True)
     hidden_size = 512
     emb_size = 30
     with open(tokendict_file_addr) as handler:
@@ -74,13 +72,13 @@ if __name__ == "__main__":
 
     print("number of model parameters! : ", trainer.count_parameters())
 
-    train = True
+    train = False
     if train:
         #trainer.pretrain_encoders(5)
-        #trainer.pretrain_cnn(10)
+        #trainer.pretrain_cnn(5)
         #trainer.pretrain_encoders(1)
-        trainer.pretrain_decoder(2)
-        train_loss, valid_loss = trainer.train(20)
+        #trainer.pretrain_decoder(5)
+        train_loss, valid_loss = trainer.train(60)
         print("train loss is : \n {}".format(train_loss))
         print("valid loss is : \n {}".format(valid_loss))
 

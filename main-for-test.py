@@ -40,7 +40,7 @@ if __name__ == "__main__":
     token_index.load('.')
 
     image = io.imread(parsed_args.file_addr)
-    image = torch.from_numpy(image).float().to(dev).unsqueeze(0).unsqueeze(0)
+    image = torch.from_numpy(image).float().to(dev).unsqueeze(0).unsqueeze(0) / 255
     result = img2seq.greedy_inference(image, token_dict['<start>'], 120)
     str = token_index.translate_to_token(result[0])
     print(str)
